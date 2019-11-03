@@ -66,8 +66,6 @@ package() {
     "${pkgdir}/usr/share/${pkgname}-cli"
   cp -R "${srcdir}/${pkgname}-${pkgver}/CliClient/node_modules" \
     "${pkgdir}/usr/share/${pkgname}-cli"
-  rm -r "${pkgdir}/usr/share/${pkgname}-cli/"
-  # usr/share/joplin/resources/app/node_modules/sqlite3/.vscode
   cp -R "${srcdir}/${pkgname}-${pkgver}/ElectronClient/app/dist/linux-unpacked/"* \
     "${pkgdir}/usr/share/${pkgname}"
 
