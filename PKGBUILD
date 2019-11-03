@@ -69,7 +69,6 @@ package() {
   cp -R "${srcdir}/${pkgname}-${pkgver}/ElectronClient/app/dist/linux-unpacked/"* \
     "${pkgdir}/usr/share/${pkgname}"
 
-
   cd ${srcdir}
   install -m755 joplin-desktop.sh "${pkgdir}/usr/bin/joplin-desktop"
   install -m755 joplin.sh "${pkgdir}/usr/bin/joplin"
