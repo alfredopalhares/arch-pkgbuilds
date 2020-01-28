@@ -6,9 +6,9 @@
 
 pkgname=joplin
 pkgver=1.0.179
-pkgrel=1
+pkgrel=2
 pkgdesc="A note taking and to-do application with synchronization capabilities"
-arch=('x86_64' 'i686')
+arch=('any')
 depends=('gtk3' 'libexif' 'libgsf' 'libjpeg-turbo' 'libwebp' 'libxss' 'nodejs'
          'nss' 'orc')
 makedepends=('git' 'npm' 'python' 'rsync')
@@ -78,7 +78,4 @@ package() {
   install -Dm644 ${srcdir}/${pkgname}.desktop -t "${pkgdir}/usr/share/applications"
 
   install -Dm644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
-
-  # Remove unneeded architecture files
-  rm -rf "${pkgdir}/usr/share/${pkgname}/resources/app/node_modules/7zip-bin-linux"/arm*
 }
