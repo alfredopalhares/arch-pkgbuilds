@@ -1,4 +1,4 @@
-FROM base/archlinux
+FROM archlinux
 
 LABEL maintainer.name="Alfredo Palhares"
 LABEL maintainer.email="alfredo@palhares.me"
