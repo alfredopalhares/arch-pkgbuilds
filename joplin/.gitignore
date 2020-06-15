@@ -1,0 +1,7 @@
+src/
+pkg
+v*.zip
+joplin*.zip
+joplin*.tar.gz
+*tar.xz
+*~
