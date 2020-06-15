@@ -3,25 +3,23 @@ FROM archlinux
 LABEL maintainer.name="Alfredo Palhares"
 LABEL maintainer.email="alfredo@palhares.me"
 
-RUN pacman -Syu --noconfirm base-devel binutils sudo \
+RUN pacman -Syu --noconfirm base-devel binutils sudo zsh \
   && echo "%builder ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/builder \
   && sed -e 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' -i /etc/locale.gen \
   && locale-gen \
   && echo "LANG=en_US.UTF-8" > /etc/locale.conf \
-  && mkdir -p /home/builder/joplin \
+  && mkdir -p /home/builder/ \
   && useradd builder \
-  && chown -R builder:builder /home/builder/
+  && chown builder:builder /home/builder
 
 COPY docker-build.sh  /usr/bin/docker-build.sh
-RUN chmod a+x /usr/bin/docker-build.sh
 
-WORKDIR /home/builder/joplin
+WORKDIR /home/builder/
+COPY . /home/builder
+RUN chown -R builder:builder /home/builder
 
 USER builder
 
-COPY joplin.desktop .
-COPY joplin-desktop.sh .
-COPY joplin.sh .
-COPY PKGBUILD .
 
-CMD ["/usr/bin/docker-build.sh"]
+
+ENTRYPOINT ["/usr/bin/docker-build.sh"]

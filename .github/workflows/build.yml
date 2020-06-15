@@ -12,6 +12,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
     - name: Build Docker
-      run: docker build -f Dockerfile -t "joplin-archlinux:${{ github.run_id}}" joplin/
+      run: docker build -f Dockerfile -t "joplin-archlinux:${{ github.run_id}}"
     - name: Build Joplin
-      run: docker run -t "joplin-archlinux:${{ github.run_id}}"
+      run: docker run -t "joplin-archlinux:${{ github.run_id}}" joplin

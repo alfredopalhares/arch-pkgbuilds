@@ -1,0 +1,6 @@
+.github/
+cleanup.sh
+*src/
+*pkg/
+*.tar.gz
+*.tar.xz
