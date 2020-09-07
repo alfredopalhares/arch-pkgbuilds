@@ -4,4 +4,5 @@ v*.zip
 joplin*.zip
 joplin*.tar.gz
 *tar.xz
+*tar.zst
 *~

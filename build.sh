@@ -1,5 +1,5 @@
 #!/bin/bash
 
-makepkg -fc
+makepkg -sfc
 
 makepkg --printsrcinfo > .SRCINFO
