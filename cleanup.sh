@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Prompts for confirmation, returns 1 if Yes
 #
@@ -21,6 +21,7 @@ function getConfirmation {
   done
 }
 
+
 echo "This script will cleanup all workfiles"
 getConfirmation "Do you want to proccess"
 if [[ $1 == "0" ]]; then
@@ -28,11 +29,12 @@ if [[ $1 == "0" ]]; then
   exit 1
 fi
 
-rm -r src/
-rm -r pkg/
-rm v*.zip
-rm v*.zip.part
-rm *tar.gz
-rm *tar.xz
+for d in $(find . -maxdepth 1 -type d); do
+  if [[ -f $d/PKGBUILD ]]; then
+    echo "Cleaning ${d} package"
+    rm -r $d/{src,pkg}
+    rm $d/{v*.zip,v*.zip.part,*tar.gz,*tar.xz,*.tar.zst}
+   fi
+done
 
 exit 0
