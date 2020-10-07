@@ -15,25 +15,11 @@ Generate new checksums using `updpkgsums` from the `pacman-contrib` package.
 updpkgsums
 ```
 
-Build the package from [joplin](./joplin) folder
+## Publishing
 
-```sh
-../build.sh
-```
+This uses [aurpublish](https://github.com/eli-schwartz/aurpublish)
 
-Install the package
 
-```sh
-makepkg -i
-```
-
-Run the Joplin GUI and CLI from a terminal to test if the install worked
-
-```sh
-joplin # CLI
-:exit
-joplin-desktop # GUI
-```
 
 ## Contributing
 
