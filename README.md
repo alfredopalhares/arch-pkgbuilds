@@ -44,7 +44,7 @@ A electron wrapper over the Exaclidraw tool.
 
 ### GOF5
 
-An Open Source F5 VPN Client [GoF5]https://github.com/kayrus/gof5)
+An Open Source F5 VPN Client [GoF5](https://github.com/kayrus/gof5)
 
 ## Installing
 
