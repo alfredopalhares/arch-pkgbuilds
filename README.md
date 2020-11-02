@@ -33,6 +33,14 @@ This contains the `PKGBUILD` and other build tools to package
 
 This package contains both the desktop and cli client
 
+
+### Excalidraw Desktop
+
+A electron wrapper over the Exaclidraw tool.
+* [Excalidraw](https://excalidraw.com/)
+* [Github Exaclidraw](https://github.com/excalidraw/excalidraw)
+* [Github Exaclidraw Desktop](https://github.com/excalidraw/excalidraw-desktop)
+
 ## Installing
 
 You can use an AUR wrapper like [yay](https://aur.archlinux.org/packages/yay/):

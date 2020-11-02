@@ -6,3 +6,5 @@ joplin*.tar.gz
 *tar.xz
 *tar.zst
 *~
+# The git source
+excalidraw-desktop/excalidraw-desktop/*
