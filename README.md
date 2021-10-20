@@ -1,4 +1,4 @@
-# Archlinux PKGBUILS
+# Archlinux PKGBUILDS
 
 
 This is my collection fo Arch Linux PKGBUILDs, some these packages are also in the
