@@ -1,0 +1,17 @@
+pkgbase = qelectrotech
+	pkgdesc = Libre and open source desktop application to create diagrams and schematics
+	pkgver = 20210909
+	pkgrel = 1
+	url = https://qelectrotech.org/
+	arch = x86_64
+	license = GPL
+	makedepends = cmake
+	makedepends = qt5-base
+	makedepends = sed
+	depends = frameworkintegration
+	depends = kconfigwidgets
+	depends = kwidgetsaddons
+	source = qelectrotech-20210909.tar.gz::https://github.com/qelectrotech/qelectrotech-source-mirror/archive/refs/tags/9-dev-2021/09/09.tar.gz
+	sha256sums = da2f0c682201e8358d060c317e78e52e2842ee9a053a03c0a738835d1c46e174
+
+pkgname = qelectrotech

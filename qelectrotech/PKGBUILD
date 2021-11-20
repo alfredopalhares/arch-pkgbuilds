@@ -1,0 +1,70 @@
+# Maintainer: Alfredo Palhares <alfredo at palhares dot me>
+
+# Please contribute to:
+# https://github.com/alfredopalhares/arch-pkgbuilds
+
+_local_version="9-dev-2021/09/09"
+pkgname=qelectrotech
+pkgver="20210909"
+pkgrel=1
+pkgdesc="Libre and open source desktop application to create diagrams and schematics"
+arch=("x86_64")
+url="https://qelectrotech.org/"
+license=('GPL')
+groups=()
+depends=("frameworkintegration"  "kconfigwidgets" "kwidgetsaddons")
+makedepends=("cmake" "qt5-base" "sed")
+optdepends=()
+provides=()
+conflicts=()
+replaces=()
+backup=()
+options=()
+install=
+changelog=
+source=("$pkgname-$pkgver.tar.gz::https://github.com/qelectrotech/qelectrotech-source-mirror/archive/refs/tags/9-dev-2021/09/09.tar.gz")
+noextract=()
+sha256sums=('da2f0c682201e8358d060c317e78e52e2842ee9a053a03c0a738835d1c46e174')
+
+prepare() {
+  cd "${srcdir}/${pkgname}-source-mirror-${_local_version//\//-}"
+  msg2 "Changing Install Locations"
+  sed -i "s,COMPIL_PREFIX              = '/usr/local/',COMPIL_PREFIX              = '${pkgdir}/usr/',g" \
+    qelectrotech.pro
+  sed -i "s,INSTALL_PREFIX             = '/usr/local/',INSTALL_PREFIX              = '${pkgdir}/usr/',g" \
+    qelectrotech.pro
+  sed -i "s,QET_MAN_PATH               = 'man/'',QET_MAN_PATH              = 'share/man/',g" \
+    qelectrotech.pro
+  msg2 "Patching man pages install script"
+  # FIXME: Check what languages are going here
+  sed -i "s,man.extra          = sh man/compress_man_pages.sh,man.extra          = yes | sh man/compress_man_pages.sh,g" \
+    qelectrotech.pro
+}
+
+build() {
+  # The Tar file has a diferent extract name from the release
+  msg2 "Checking out to ${_local_version//\//-}"
+  cd "${srcdir}/${pkgname}-source-mirror-${_local_version//\//-}"
+  msg2 "Building Project"
+  mkdir -p build
+  cd build
+  qmake ../qelectrotech.pro
+  msg2 "Compiling with ${MAKEFLAGS}"
+  make $MAKEFLAGS
+}
+
+package() {
+  mkdir -p "${pkgdir}/usr/share/qelectrotech"
+  msg2 "Installing files"
+  cd "${srcdir}/${pkgname}-source-mirror-${_local_version//\//-}/build/"
+  cp -r "../man" "."
+  make install
+
+  msg2 "Installing LICENSE"
+  install -Dm644 "${srcdir}/${pkgname}-source-mirror-${_local_version//\//-}/LICENSE" \
+    -t "${pkgdir}/usr/share/licenses/${pkgname}"
+
+  msg2 "Fixing language Locations"
+  mkdir -p "${pkgdir}/usr/local/share/qelectrotech/lang"
+  cp -r "${pkgdir}/usr/share/qelectrotech/lang/" "${pkgdir}/usr/local/share/qelectrotech/lang/"
+}
