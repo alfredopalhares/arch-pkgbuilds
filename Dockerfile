@@ -3,7 +3,7 @@ FROM archlinux
 LABEL maintainer.name="Alfredo Palhares"
 LABEL maintainer.email="alfredo@palhares.me"
 
-RUN pacman -Syu --noconfirm base-devel binutils sudo zsh \
+RUN pacman -Syu --needed --noconfirm base-devel binutils sudo zsh \
   && echo "%builder ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/builder \
   && sed -e 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' -i /etc/locale.gen \
   && locale-gen \
