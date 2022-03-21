@@ -9,4 +9,4 @@ fi
 
 cd $joplin_dir
 
-node main.js ${@}
+node build/main.js ${@}
