@@ -1,6 +1,6 @@
 # Maintainer: Alfredo Palhares <alfredo at palhares dot me>
 # Contributor: Mark Wagie <mark dot wagie at tutanota dot com>
-# Contributor:  Matteo Parolari
+# Contributor: Matteo Parolari
 # Contributor: gardar <aur@gardar.net>
 
 # Please contribute to:
@@ -23,12 +23,13 @@ source=("joplin.desktop" "joplin-desktop.sh" "joplin.sh"
   "joplin-${pkgver}.tar.gz::https://github.com/laurent22/joplin/archive/v${pkgver}.tar.gz")
 sha256sums=('c7c5d8b0ff9edb810ed901ea21352c9830bfa286f3c18b1292deca5b2f8febd2'
             'a450284fe66d89aa463d129ce8fff3a0a1a783a64209e4227ee47449d5737be8'
-            '45e93606b2e35f84b5ded81c20a476ebca5318a2bb7485aa7283216481a2df1e'
+            'fa70f3b94d9fa43eed907f91decce51d28e61af84372af177e5617592a37f8c2'
             '1e605cf5519d8bd32cda541f5c693083183ddde6edeb5ce3cb440f14bb32d999')
 
 # local npm cache directory
 _yarn_cache="yarn-cache"
 
+## Sets up a local cache to prevent the redownloding the packages on rebuilds
 _get_cache() {
   if [[ "${_yarn_cache}" =~ ^/ ]]; then
     printf "%s" "${_yarn_cache}"
@@ -37,14 +38,24 @@ _get_cache() {
   fi
 }
 
+_get_yarn_bin() {
+  local yarn_bin=$(yq ".yarnPath" ${srcdir}/joplin-${pkgver}/.yarnrc.yml)
+  #Remove quotes
+  yarn_bin="${yarn_bin%\"}"
+  yarn_bin="${yarn_bin#\"}"
+  printf "%s" "${srcdir}/joplin-${pkgver}/${yarn_bin}"
+}
+
 prepare() {
   local cache=$(_get_cache)
+  local yarn_bin=$(_get_yarn_bin)
   msg2 "Yarn cache directory: $cache"
+  msg2 "Yarn binary: ${yarn_bin}"
 
   msg2 "Disabling husky (git hooks)"
   sed -i '/"husky": ".*"/d' "${srcdir}/joplin-${pkgver}/package.json"
 
-  # There are so many people 
+  # There are so many people
   msg2 "Checking Node PATH"
   local w_node=$(which node)
   if [[ $w_node != "/usr/bin/node" ]]; then
@@ -55,8 +66,6 @@ prepare() {
   find "${srcdir}/joplin-${pkgver}" -type f -name package-lock.json -delete
   msg2 "Appliying patches..."
 
-  msg2 "Installing yarn 3..."
-  mkdir -p "${srcdir}/joplin-${pkgver}/.yarn/releases/"
   msg2 "Tweaking .yarnrc"
   yq -i -y ".cacheFolder=(\"${cache}\")" "${srcdir}/joplin-${pkgver}/.yarnrc.yml"
 
@@ -85,6 +94,7 @@ prepare() {
 
 build() {
   local cache=$(_get_cache)
+  local yarn_bin=$(_get_yarn_bin)
   msg2 "Yarn cache directory: $cache"
   cd "${srcdir}/joplin-${pkgver}"
 
@@ -94,9 +104,13 @@ build() {
 
   msg2 "Installing dependencies through Yarn 3..."
   # FSevents is on the optinal dependencies and its Mac Only
-  yarn
+  eval $yarn_bin
 
   msg2 "Building the workspace"
+  $yarn_bin workspace @joplin/lib install
+  $yarn_bin workspace @joplin/renderer install
+  $yarn_bin workspace @joplin/app-desktop install
+  $yarn_bin workspace @joplin/app-desktop run electron-builder build --linux
 
 }
 
@@ -113,17 +127,23 @@ package_joplin() {
   depends=('coreutils' 'libsecret' 'nodejs' 'python')
 
   local cache=$(_get_cache)
+  local yarn_bin=$(_get_yarn_bin)
   msg2 "Yarn cache directory: $cache"
 
-  msg2 "Packaging CLI"
+  msg2 "Packaging CLI with Repo Gulp"
   cd "${srcdir}/joplin-${pkgver}/packages/app-cli/"
-  gulp build
-  mkdir -p "${pkgdir}/usr/share/joplin/"
-  rsync -avp "node_modules/" "${pkgdir}/usr/share/joplin/node_modules/"
-  rsync -avp "build/" "${pkgdir}/usr/share/joplin/build/"
-  rsync -avp "package.json" "${pkgdir}/usr/share/joplin/package.json"
+  gulp_bin=$($yarn_bin bin gulp)
+  msg2 "Using gulp: ${gulp_bin}"
+  #${gulp_bin} build
+  cd "${srcdir}/joplin-${pkgver}/packages/app-cli/build"
+  #$yarn_bin pack
 
-  msg2 "Installing CLI ($pack)"
+  #msg2 "Rsyncing files"
+  #mkdir -p "${pkgdir}/usr/share/joplin/"
+  #rsync -avp "./" "${pkgdir}/usr/share/joplin/app-cli"
+  #rsync -avp "../lib/" "${pkgdir}/usr/share/joplin/lib"
+  #rsync -avp "../renderer/" "${pkgdir}/usr/share/joplin/renderer"
+
 
   msg2 "Fixing Directories Permissions"
   # Non-deterministic race in npm gives 777 permissions to random directories.
@@ -135,7 +155,7 @@ package_joplin() {
 
   msg2 "Removing References to \$srcdir"
   local tmppackage="$(mktemp --tmpdir="$srcdir")"
-  local pkgjson="$pkgdir/usr/share/joplin/package.json" # TODO joplin name
+  local pkgjson="$pkgdir/usr/share/joplin/app-cli/package.json" # TODO joplin name
   jq '.|=with_entries(select(.key|test("_.+")|not))' "$pkgjson" > "$tmppackage"
   mv "$tmppackage" "$pkgjson"
   chmod 644 "$pkgjson"
@@ -170,22 +190,21 @@ package_joplin-desktop() {
 
   msg2 "Building Desktop with packaged Electron..."
   cd "${srcdir}/joplin-${pkgver}/packages/app-desktop/"
-  electron_dir="/usr/lib/electron"
-  electron_version=$(cat /usr/lib/electron/version)
-  msg2 "Using Electron Version ${electron_version}"
-  # Current version of electron does not work
-  #USE_HARD_LINKS=false yarn run dist -- --publish=never  --linux  --x64 \
-  sed -i "s/const forceAbiArgs = '--force-abi 89';/const forceAbiArgs = ''/" tools/electronRebuild.js
-  gulp electronRebuild
-  #DEBUG="electron-rebuild" USE_HARD_LINKS=false yarn run dist -- --publish=never \
-  #  --dir="dist/"
-   # --dir="dist/" -c.electronDist=$electron_dir -c.electronVersion=$electron_version
-      # FIXME: Using packaged electron breaks the interface
+  #electron_dir="/usr/lib/electron"
+  #electron_version=$(cat /usr/lib/electron/version)
+  #msg2 "Using Electron Version ${electron_version}"
+  ## Current version of electron does not work
+  ##USE_HARD_LINKS=false yarn run dist -- --publish=never  --linux  --x64 \
+  #sed -i "s/const forceAbiArgs = '--force-abi 89';/const forceAbiArgs = ''/" tools/electronRebuild.js
+  #gulp electronRebuild
+  ##DEBUG="electron-rebuild" USE_HARD_LINKS=false yarn run dist -- --publish=never \
+  ##  --dir="dist/"
+  # # --dir="dist/" -c.electronDist=$electron_dir -c.electronVersion=$electron_version
+  #    # FIXME: Using packaged electron breaks the interface
 
   msg2 "Packaging the desktop..."
   # TODO: Cleanup app.asar file
   cd dist/linux-unpacked/
-  #rsync -avp "../../node_modules/" "resources/app.asar.unpacked/node_modules/"
   mkdir -p "${pkgdir}/usr/share/joplin-desktop"
   cp -R "." "${pkgdir}/usr/share/joplin-desktop"
   msg2 "Installing LICENSE..."
