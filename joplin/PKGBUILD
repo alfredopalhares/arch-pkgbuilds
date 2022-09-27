@@ -15,7 +15,7 @@ install="joplin.install"
 depends=('electron' 'gtk3' 'libexif' 'libgsf' 'libjpeg-turbo' 'libwebp' 'libxss' 'nodejs>=17.3'
          'nss' 'orc' 'rsync' 'libvips')
 optdepends=('libappindicator-gtk3: for tray icon')
-arch=('x86_64' 'i686')
+arch=('x86_64' 'i686' 'aarch64')
 makedepends=('git' 'npm' 'yarn' 'python2' 'rsync' 'jq' 'yq' 'electron' 'libgsf' 'node-gyp>=8.4.1' 'libvips')
 url="https://joplinapp.org/"
 license=('MIT')
@@ -84,6 +84,9 @@ build() {
   # Force Lang
   # INFO: https://github.com/alfredopalhares/joplin-pkgbuild/issues/25
   export LANG=en_US.utf8
+
+  # Until it is fixed upstream, manually override the electron version
+  $yarn_bin workspace @joplin/app-desktop add electron@19.0.10
 
   msg2 "Installing dependencies through Yarn 3..."
   # FSevents is on the optinal dependencies and its Mac Only
@@ -180,7 +183,7 @@ package_joplin-desktop() {
 
   msg2 "Packaging the desktop..."
   # TODO: Cleanup app.asar file
-  cd dist/linux-unpacked/
+  cd dist/linux-*unpacked/
   mkdir -p "${pkgdir}/usr/share/joplin-desktop"
   cp -R "." "${pkgdir}/usr/share/joplin-desktop"
   msg2 "Installing LICENSE..."
