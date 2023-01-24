@@ -68,5 +68,5 @@ Check more information on the [Archwiki](https://wiki.archlinux.org/index.php/Ma
 
 ## Maintainer
 
- [Alfredo Palhares](https://github.com/masterkorp)
+ [Alfredo Palhares](https://github.com/alfredopalhares)
 
