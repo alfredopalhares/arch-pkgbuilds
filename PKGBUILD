@@ -119,7 +119,7 @@ check() {
 
 package_joplin() {
     pkgdesc="A note taking and to-do application with synchronization capabilities - CLI App"
-    depends=('coreutils' 'libsecret' 'nodejs' 'python')
+    depends=('coreutils' 'libsecret' 'nodejs' 'python' 'libvips')
 
     local cache=$(_get_cache)
     local yarn_bin=$(_get_yarn_bin)
