@@ -5,6 +5,7 @@ pkgbase = joplin
 	install = joplin.install
 	arch = x86_64
 	arch = i686
+	arch = aarch64
 	groups = joplin
 	license = MIT
 	makedepends = git
