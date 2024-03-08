@@ -8,15 +8,14 @@
 
 pkgbase="joplin"
 pkgname=('joplin' 'joplin-desktop')
-pkgver=2.12.15
+pkgver=2.14.19
 groups=('joplin')
 pkgrel=1
 install="joplin.install"
-depends=('electron' 'gtk3' 'libexif' 'libgsf' 'libjpeg-turbo' 'libwebp' 'libxss' 'nodejs>=17.3'
-'nss' 'orc' 'rsync' 'libvips')
+depends=('electron' 'gtk3' 'libexif' 'libgsf' 'libjpeg-turbo' 'libwebp' 'libxss' 'nodejs>=17.3' 'nss' 'orc' 'rsync')
 optdepends=('libappindicator-gtk3: for tray icon')
 arch=('x86_64' 'i686')
-makedepends=('git' 'npm' 'yarn' 'python' 'rsync' 'jq' 'yq' 'electron' 'libgsf' 'node-gyp>=8.4.1' 'libvips')
+makedepends=('git' 'npm' 'yarn' 'python' 'rsync' 'jq' 'yq' 'electron' 'libgsf' 'node-gyp>=8.4.1')
 url="https://joplinapp.org/"
 license=('MIT')
 source=("joplin.desktop" "joplin-desktop.sh" "joplin.sh"
@@ -24,7 +23,7 @@ source=("joplin.desktop" "joplin-desktop.sh" "joplin.sh"
 sha256sums=('c7c5d8b0ff9edb810ed901ea21352c9830bfa286f3c18b1292deca5b2f8febd2'
     'a450284fe66d89aa463d129ce8fff3a0a1a783a64209e4227ee47449d5737be8'
     '16aed6c4881efcef3fd86f7c07afb4c743e24d9da342438a8167346a015629e0'
-'1ab8cac6ded11abc5a6437b58342b519466cbf869bf3e7cc0a651413ff8faa0a')
+    'ec65d5bbd790c65a0f6f4b7ed6838e13bcda5a4ec63488262a28db4b047b7050')
 
 # local npm cache directory
 _yarn_cache="yarn-cache"
@@ -49,11 +48,15 @@ _get_yarn_bin() {
 prepare() {
     local cache=$(_get_cache)
     local yarn_bin=$(_get_yarn_bin)
+    local package_json="${srcdir}/joplin-${pkgver}/package.json"
     msg2 "Yarn cache directory: $cache"
     msg2 "Yarn binary: ${yarn_bin}"
 
     msg2 "Disabling husky (git hooks)"
-    sed -i '/"husky": ".*"/d' "${srcdir}/joplin-${pkgver}/package.json"
+    # This is ugly and unreadable, but it gets rid of "husky" everwhere without breaking package.json
+    cat <<< $(jq 'with_entries( select(.key == "resolutions").value |= del(.husky) )' ${package_json}) > "${package_json}"
+    cat <<< $(jq 'del(.husky)' "${package_json}") > "${package_json}"
+    cat <<< $(jq 'with_entries( select(.key == "devDependencies").value |= del(.husky) )' "${package_json}") > "${package_json}"
 
     # There are so many people
     msg2 "Checking Node PATH"
@@ -119,7 +122,7 @@ check() {
 
 package_joplin() {
     pkgdesc="A note taking and to-do application with synchronization capabilities - CLI App"
-    depends=('coreutils' 'libsecret' 'nodejs' 'python' 'libvips')
+    depends=('coreutils' 'libsecret' 'nodejs' 'python')
 
     local cache=$(_get_cache)
     local yarn_bin=$(_get_yarn_bin)
