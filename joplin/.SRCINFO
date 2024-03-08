@@ -1,5 +1,5 @@
 pkgbase = joplin
-	pkgver = 2.12.15
+	pkgver = 2.14.19
 	pkgrel = 1
 	url = https://joplinapp.org/
 	install = joplin.install
