@@ -8,7 +8,7 @@
 
 pkgbase="joplin"
 pkgname=('joplin' 'joplin-desktop')
-pkgver=2.14.19
+pkgver=2.14.20
 groups=('joplin')
 pkgrel=1
 install="joplin.install"
@@ -23,7 +23,7 @@ source=("joplin.desktop" "joplin-desktop.sh" "joplin.sh"
 sha256sums=('c7c5d8b0ff9edb810ed901ea21352c9830bfa286f3c18b1292deca5b2f8febd2'
     'a450284fe66d89aa463d129ce8fff3a0a1a783a64209e4227ee47449d5737be8'
     '16aed6c4881efcef3fd86f7c07afb4c743e24d9da342438a8167346a015629e0'
-    'ec65d5bbd790c65a0f6f4b7ed6838e13bcda5a4ec63488262a28db4b047b7050')
+    '919e9300e66bc6c24a282cbf93c43c228cdfe3227bdb1eaa50fdadef4734901b')
 
 # local npm cache directory
 _yarn_cache="yarn-cache"
@@ -53,7 +53,11 @@ prepare() {
     msg2 "Yarn binary: ${yarn_bin}"
 
     msg2 "Disabling husky (git hooks)"
-    # This is ugly and unreadable, but it gets rid of "husky" everwhere without breaking package.json
+    # This is ugly and unreadable, but it gets rid of "husky" everwhere
+    # without breaking package.json
+    #
+    # Unfortunatly, husky installs git hooks in this (arch-pkgbuilds)
+    # repo when we run the below build script
     cat <<< $(jq 'with_entries( select(.key == "resolutions").value |= del(.husky) )' ${package_json}) > "${package_json}"
     cat <<< $(jq 'del(.husky)' "${package_json}") > "${package_json}"
     cat <<< $(jq 'with_entries( select(.key == "devDependencies").value |= del(.husky) )' "${package_json}") > "${package_json}"
@@ -142,7 +146,7 @@ package_joplin() {
     $yarn_bin init
     # FIXME: The repo wran crashed
     # You also need to pipe yes, for depeendy
-    yes | yarn add ./package.tgz
+    yes | $yarn_bin add ./package.tgz
 
     msg2 "Fixing Directories Permissions"
     # Non-deterministic race in npm gives 777 permissions to random directories.
