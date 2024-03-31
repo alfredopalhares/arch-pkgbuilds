@@ -72,19 +72,7 @@ prepare() {
     msg2 "Deleting app-mobile"
     rm -r "${srcdir}/joplin-${pkgver}/packages/app-mobile"
     rm -r "${srcdir}/joplin-${pkgver}/packages/app-clipper"
-
-    if [[ ${pkgver} == 2.9.17 ]]; then
-
-        msg2 "******************* BEGIN: TEMPORARY FIX FOR VERSION 2.9.17 ONLY **********************"
-
-        # Let yarn resolve version ^2.12.1 of nan package to 2.17.0 instead of 2.15.0 (https://github.com/nodejs/nan/pull/943)
-        local package_json=${srcdir}/joplin-${pkgver}/package.json
-        cp $package_json $package_json.bak
-        jq '. + {"resolutions": {"nan@^2.12.1": "2.17.0"}}' $package_json.bak > $package_json
-
-        msg2 "******************* END: TEMPORARY FIX FOR VERSION 2.9.17 ONLY ************************"
-
-    fi
+    rm -r "${srcdir}/joplin-${pkgver}/packages/server"
 }
 
 
