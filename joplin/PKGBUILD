@@ -8,7 +8,7 @@
 
 pkgbase="joplin"
 pkgname=('joplin' 'joplin-desktop')
-pkgver=2.12.18
+pkgver=2.14.20
 groups=('joplin')
 pkgrel=1
 install="joplin.install"
@@ -23,8 +23,8 @@ source=("joplin.desktop" "joplin-desktop.sh" "joplin.sh"
 "joplin-${pkgver}.tar.gz::https://github.com/laurent22/joplin/archive/v${pkgver}.tar.gz")
 sha256sums=('c7c5d8b0ff9edb810ed901ea21352c9830bfa286f3c18b1292deca5b2f8febd2'
     'a450284fe66d89aa463d129ce8fff3a0a1a783a64209e4227ee47449d5737be8'
-    '16aed6c4881efcef3fd86f7c07afb4c743e24d9da342438a8167346a015629e0'
-'a85f2133e5b71d829fbc9438d2e3191172f8af2e270906745203a8fa36aac307')
+    'b6a8361cbc59e7dbc33bcc427274efb945d8d654bf013b12c7021be681f568e2'
+'919e9300e66bc6c24a282cbf93c43c228cdfe3227bdb1eaa50fdadef4734901b')
 
 # local npm cache directory
 _yarn_cache="yarn-cache"
@@ -46,51 +46,56 @@ _get_yarn_bin() {
     printf "%s" "${srcdir}/joplin-${pkgver}/${yarn_bin}"
 }
 
+_set_env() {
+    export ELECTRON_SKIP_BINARY_DOWNLOAD=1
+    export SHARP_IGNORE_GLOBAL_LIBVIPS=1
+}
+
 prepare() {
     local cache=$(_get_cache)
     local yarn_bin=$(_get_yarn_bin)
-    msg2 "Yarn cache directory: $cache"
+    _set_env
+    msg2 "Yarn cache directoaary: $cache"
     msg2 "Yarn binary: ${yarn_bin}"
+    $yarn_bin --version
 
     msg2 "Disabling husky (git hooks)"
-    sed -i '/"husky": ".*"/d' "${srcdir}/joplin-${pkgver}/package.json"
+    # sed -i '/"husky": ".*"/d' "${srcdir}/joplin-${pkgver}/package.json"
 
     # There are so many people
     msg2 "Checking Node PATH"
-    local w_node=$(which node)
-    if [[ $w_node != "/usr/bin/node" ]]; then
-        msg2 "WARNING: Using path ${w_node} beware its not the defualt path, check if you are using nvm or similar"
-    fi
+    # local w_node=$(which node)
+    # if [[ $w_node != "/usr/bin/node" ]]; then
+    #     msg2 "WARNING: Using path ${w_node} beware its not the default path, check if you are using nvm or similar"
+    # fi
+
+    msg2 "Removing yarm version lock"
+    # jq "del(.packageManager)" "${srcdir}/joplin-${pkgver}/package.json" > "${srcdir}/joplin-${pkgver}/package_new.json"
+    # mv "${srcdir}/joplin-${pkgver}/package_new.json" "${srcdir}/joplin-${pkgver}/package.json"
+
+    msg2 "Disabling Optional Dependencias"
+    # find "${srcdir}/joplin-${pkgver}/" -type f -name "package.json" -exec sed -i 's_"optionalDependencies":_"UNUSED":_' {} \;
 
     msg2 "Tweaking .yarnrc"
-    yq -i -y ".cacheFolder=(\"${cache}\")" "${srcdir}/joplin-${pkgver}/.yarnrc.yml"
+    # yq -i -y ".cacheFolder=(\"${cache}\")" "${srcdir}/joplin-${pkgver}/.yarnrc.yml"
 
     msg2 "Tweaking lerna.json"
-    local tmp_json="$(mktemp --tmpdir="$srcdir")"
-    local lerna_json="${srcdir}/joplin-${pkgver}/lerna.json"
+    # local tmp_json="$(mktemp --tmpdir="$srcdir")"
+    # local lerna_json="${srcdir}/joplin-${pkgver}/lerna.json"
 
-    msg2 "Deleting app-mobile"
+    msg2 "Deleting Unnecessary Packages"
     rm -r "${srcdir}/joplin-${pkgver}/packages/app-mobile"
     rm -r "${srcdir}/joplin-${pkgver}/packages/app-clipper"
-
-    if [[ ${pkgver} == 2.9.17 ]]; then
-
-        msg2 "******************* BEGIN: TEMPORARY FIX FOR VERSION 2.9.17 ONLY **********************"
-
-        # Let yarn resolve version ^2.12.1 of nan package to 2.17.0 instead of 2.15.0 (https://github.com/nodejs/nan/pull/943)
-        local package_json=${srcdir}/joplin-${pkgver}/package.json
-        cp $package_json $package_json.bak
-        jq '. + {"resolutions": {"nan@^2.12.1": "2.17.0"}}' $package_json.bak > $package_json
-
-        msg2 "******************* END: TEMPORARY FIX FOR VERSION 2.9.17 ONLY ************************"
-
-    fi
+    rm -r "${srcdir}/joplin-${pkgver}/packages/server"
 }
 
 
 build() {
     local cache=$(_get_cache)
     local yarn_bin=$(_get_yarn_bin)
+    _set_env
+
+    msg2 "Yarn binary: ${yarn_bin}"
     msg2 "Yarn cache directory: $cache"
     cd "${srcdir}/joplin-${pkgver}"
 
@@ -99,10 +104,11 @@ build() {
     export LANG=en_US.utf8
 
     msg2 "Installing dependencies through Yarn 3..."
-    # FSevents is on the optinal dependencies and its Mac Only
     eval $yarn_bin
 
     msg2 "Building the workspace"
+    $yarn_bin install
+    echo "hello"
     $yarn_bin workspace @joplin/lib install
     $yarn_bin workspace @joplin/renderer install
     $yarn_bin workspace @joplin/app-desktop install
@@ -123,23 +129,27 @@ package_joplin() {
 
     local cache=$(_get_cache)
     local yarn_bin=$(_get_yarn_bin)
+    _set_env
     msg2 "Yarn cache directory: $cache"
 
     msg2 "Packaging CLI with Repo Gulp"
     cd "${srcdir}/joplin-${pkgver}/packages/app-cli/"
+    # npx gulp build
     gulp_bin=$($yarn_bin bin gulp)
     msg2 "Using gulp: ${gulp_bin}"
     ${gulp_bin} build
     $yarn_bin pack
 
     msg2 "Installing package"
+    export SKIP_YARN_COREPACK_CHECK=0
     mkdir -p "${pkgdir}/usr/share/joplin/"
     mv package.tgz "${pkgdir}/usr/share/joplin/"
     cd "${pkgdir}/usr/share/joplin/"
-    $yarn_bin init
-    # FIXME: The repo wran crashed
+    yes | $yarn_bin init
+    # FIXME: The repo the actually install does not work
     # You also need to pipe yes, for depeendy
-    yes | yarn add ./package.tgz
+    # $yarn_bin add ./package.tgz
+    npm install -g --prefix "${pkgdir}/usr" ./package.tgz
 
     msg2 "Fixing Directories Permissions"
     # Non-deterministic race in npm gives 777 permissions to random directories.
