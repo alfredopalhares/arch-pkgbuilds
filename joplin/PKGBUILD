@@ -79,7 +79,7 @@ build() {
     # INFO: https://github.com/alfredopalhares/joplin-pkgbuild/issues/25
     export LANG=en_US.utf8
 
-    #msg2 "Installing dependencies through Yarn 3..."
+    msg2 "Installing dependencies through Yarn 3..."
     eval $yarn_bin
 
     msg2 "Building the workspace"
