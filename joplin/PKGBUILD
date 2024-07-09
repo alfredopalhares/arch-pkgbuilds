@@ -59,7 +59,8 @@ prepare() {
     ${yarn_bin} --version
 
     msg2 "Deleting Unnecessary Packages"
-#?    rm -r "${srcdir}/joplin-${pkgver}/packages/app-mobile"
+# Joplin build script, tests for files inside this directory
+#    rm -r "${srcdir}/joplin-${pkgver}/packages/app-mobile"
     rm -r "${srcdir}/joplin-${pkgver}/packages/app-clipper"
     rm -r "${srcdir}/joplin-${pkgver}/packages/server"
 }
@@ -79,11 +80,10 @@ build() {
     export LANG=en_US.utf8
 
     #msg2 "Installing dependencies through Yarn 3..."
-    # not sure why this isn't working or why we need to do this...
     eval $yarn_bin
 
     msg2 "Building the workspace"
-    # added --inline-builds to dump logs to screen when building
+# added --inline-builds to dump logs to screen when building
     ${yarn_bin} install --inline-builds
     ${yarn_bin} workspace @joplin/lib install --inline-builds
     ${yarn_bin} workspace @joplin/renderer install --inline-builds
