@@ -8,23 +8,22 @@
 
 pkgbase="joplin"
 pkgname=('joplin' 'joplin-desktop')
-pkgver=2.14.20
+pkgver=3.0.13
 groups=('joplin')
 pkgrel=1
 install="joplin.install"
-depends=('electron' 'gtk3' 'libexif' 'libgsf' 'libjpeg-turbo' 'libwebp' 'libxss' 'nodejs>=17.3'
-'nss' 'orc' 'rsync' 'libvips')
+depends=('electron' 'gtk3' 'libexif' 'libgsf' 'libjpeg-turbo' 'libwebp' 'libxss' 'nodejs>=20.15.0' 'nss' 'orc' 'rsync')
 optdepends=('libappindicator-gtk3: for tray icon')
 arch=('x86_64' 'i686')
-makedepends=('git' 'npm' 'yarn' 'python' 'rsync' 'jq' 'yq' 'electron' 'libgsf' 'node-gyp>=8.4.1' 'libvips')
+makedepends=('git' 'npm' 'yarn' 'python' 'rsync' 'jq' 'yq' 'electron' 'libgsf' 'node-gyp>=9.4.1' 'python-setuptools')
 url="https://joplinapp.org/"
 license=('MIT')
 source=("joplin.desktop" "joplin-desktop.sh" "joplin.sh"
 "joplin-${pkgver}.tar.gz::https://github.com/laurent22/joplin/archive/v${pkgver}.tar.gz")
 sha256sums=('c7c5d8b0ff9edb810ed901ea21352c9830bfa286f3c18b1292deca5b2f8febd2'
-    'a450284fe66d89aa463d129ce8fff3a0a1a783a64209e4227ee47449d5737be8'
-    'b6a8361cbc59e7dbc33bcc427274efb945d8d654bf013b12c7021be681f568e2'
-'919e9300e66bc6c24a282cbf93c43c228cdfe3227bdb1eaa50fdadef4734901b')
+            'a450284fe66d89aa463d129ce8fff3a0a1a783a64209e4227ee47449d5737be8'
+            'b6a8361cbc59e7dbc33bcc427274efb945d8d654bf013b12c7021be681f568e2'
+            '2bf91efec385801bb13b62b459e21c1eb80d35a772f517ba7d079eb91faa1f98')
 
 # local npm cache directory
 _yarn_cache="yarn-cache"
@@ -55,36 +54,13 @@ prepare() {
     local cache=$(_get_cache)
     local yarn_bin=$(_get_yarn_bin)
     _set_env
-    msg2 "Yarn cache directoaary: $cache"
+    msg2 "Yarn cache directory: ${cache}"
     msg2 "Yarn binary: ${yarn_bin}"
-    $yarn_bin --version
-
-    msg2 "Disabling husky (git hooks)"
-    # sed -i '/"husky": ".*"/d' "${srcdir}/joplin-${pkgver}/package.json"
-
-    # There are so many people
-    msg2 "Checking Node PATH"
-    # local w_node=$(which node)
-    # if [[ $w_node != "/usr/bin/node" ]]; then
-    #     msg2 "WARNING: Using path ${w_node} beware its not the default path, check if you are using nvm or similar"
-    # fi
-
-    msg2 "Removing yarm version lock"
-    # jq "del(.packageManager)" "${srcdir}/joplin-${pkgver}/package.json" > "${srcdir}/joplin-${pkgver}/package_new.json"
-    # mv "${srcdir}/joplin-${pkgver}/package_new.json" "${srcdir}/joplin-${pkgver}/package.json"
-
-    msg2 "Disabling Optional Dependencias"
-    # find "${srcdir}/joplin-${pkgver}/" -type f -name "package.json" -exec sed -i 's_"optionalDependencies":_"UNUSED":_' {} \;
-
-    msg2 "Tweaking .yarnrc"
-    # yq -i -y ".cacheFolder=(\"${cache}\")" "${srcdir}/joplin-${pkgver}/.yarnrc.yml"
-
-    msg2 "Tweaking lerna.json"
-    # local tmp_json="$(mktemp --tmpdir="$srcdir")"
-    # local lerna_json="${srcdir}/joplin-${pkgver}/lerna.json"
+    ${yarn_bin} --version
 
     msg2 "Deleting Unnecessary Packages"
-    rm -r "${srcdir}/joplin-${pkgver}/packages/app-mobile"
+# Joplin build script, tests for files inside this directory
+#    rm -r "${srcdir}/joplin-${pkgver}/packages/app-mobile"
     rm -r "${srcdir}/joplin-${pkgver}/packages/app-clipper"
     rm -r "${srcdir}/joplin-${pkgver}/packages/server"
 }
@@ -96,7 +72,7 @@ build() {
     _set_env
 
     msg2 "Yarn binary: ${yarn_bin}"
-    msg2 "Yarn cache directory: $cache"
+    msg2 "Yarn cache directory: ${cache}"
     cd "${srcdir}/joplin-${pkgver}"
 
     # Force Lang
@@ -107,12 +83,12 @@ build() {
     eval $yarn_bin
 
     msg2 "Building the workspace"
-    $yarn_bin install
-    echo "hello"
-    $yarn_bin workspace @joplin/lib install
-    $yarn_bin workspace @joplin/renderer install
-    $yarn_bin workspace @joplin/app-desktop install
-    $yarn_bin workspace @joplin/app-desktop run electron-builder build --linux
+# added --inline-builds to dump logs to screen when building
+    ${yarn_bin} install --inline-builds
+    ${yarn_bin} workspace @joplin/lib install --inline-builds
+    ${yarn_bin} workspace @joplin/renderer install --inline-builds
+    ${yarn_bin} workspace @joplin/app-desktop install --inline-builds
+    ${yarn_bin} workspace @joplin/app-desktop run electron-builder build --linux
 }
 
 #FIXME: These checks fail on some machines, even with the exit 0
@@ -125,27 +101,27 @@ check() {
 
 package_joplin() {
     pkgdesc="A note taking and to-do application with synchronization capabilities - CLI App"
-    depends=('coreutils' 'libsecret' 'nodejs' 'python' 'libvips')
+    depends=('coreutils' 'libsecret' 'nodejs' 'python')
 
     local cache=$(_get_cache)
     local yarn_bin=$(_get_yarn_bin)
     _set_env
-    msg2 "Yarn cache directory: $cache"
+    msg2 "Yarn cache directory: ${cache}"
 
     msg2 "Packaging CLI with Repo Gulp"
     cd "${srcdir}/joplin-${pkgver}/packages/app-cli/"
     # npx gulp build
-    gulp_bin=$($yarn_bin bin gulp)
+    gulp_bin=$(${yarn_bin} bin gulp)
     msg2 "Using gulp: ${gulp_bin}"
     ${gulp_bin} build
-    $yarn_bin pack
+    ${yarn_bin} pack
 
     msg2 "Installing package"
     export SKIP_YARN_COREPACK_CHECK=0
     mkdir -p "${pkgdir}/usr/share/joplin/"
     mv package.tgz "${pkgdir}/usr/share/joplin/"
     cd "${pkgdir}/usr/share/joplin/"
-    yes | $yarn_bin init
+    yes | ${yarn_bin} init
     # FIXME: The repo the actually install does not work
     # You also need to pipe yes, for depeendy
     # $yarn_bin add ./package.tgz
@@ -157,7 +133,7 @@ package_joplin() {
     find "${pkgdir}/usr" -type d -exec chmod 755 {} +
 
     msg2 "Removing References to \$pkgdir"
-    find "$pkgdir" -name package.json -print0 | xargs -0 sed -i "/_where/d"
+    find "${pkgdir}" -name package.json -print0 | xargs -0 sed -i "/_where/d"
 
     msg2 "Fixing Permissions set by npm"
     # npm gives ownership of ALL FILES to build user
