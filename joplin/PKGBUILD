@@ -10,12 +10,12 @@ pkgbase="joplin"
 pkgname=('joplin' 'joplin-desktop')
 pkgver=3.0.14
 groups=('joplin')
-pkgrel=1
+pkgrel=2
 install="joplin.install"
 depends=('electron' 'gtk3' 'libexif' 'libgsf' 'libjpeg-turbo' 'libwebp' 'libxss' 'nodejs>=20.15.0' 'nss' 'orc' 'rsync')
 optdepends=('libappindicator-gtk3: for tray icon')
 arch=('x86_64' 'i686')
-makedepends=('git' 'npm' 'yarn' 'python' 'rsync' 'jq' 'yq' 'electron' 'libgsf' 'node-gyp>=9.4.1' 'python-setuptools')
+makedepends=('git' 'npm' 'yarn' 'python' 'electron' 'libgsf' 'node-gyp>=9.4.1' 'python-setuptools')
 url="https://joplinapp.org/"
 license=('MIT')
 source=("joplin.desktop" "joplin-desktop.sh" "joplin.sh"
@@ -38,10 +38,7 @@ _get_cache() {
 }
 
 _get_yarn_bin() {
-    local yarn_bin=$(yq ".yarnPath" ${srcdir}/joplin-${pkgver}/.yarnrc.yml)
-    #Remove quotes
-    yarn_bin="${yarn_bin%\"}"
-    yarn_bin="${yarn_bin#\"}"
+    local yarn_bin=$(sed -n 's/^yarnPath: //p' ${srcdir}/joplin-${pkgver}/.yarnrc.yml)
     printf "%s" "${srcdir}/joplin-${pkgver}/${yarn_bin}"
 }
 
